@@ -254,8 +254,54 @@
         Yêu cầu bổ sung được trích xuất một số sở thích theo từ khóa;
         các ý khác có thể chưa được hiểu hoặc xử lý.
         Dữ liệu vải chưa được xác minh độc lập;
-        hệ thống chưa kết nối mô hình AI.
+        Chức năng tư vấn chất liệu sử dụng quy tắc từ khóa;
+        tính năng hỏi AI được cung cấp riêng bên dưới.
     </p>
+
+    <section id="aiSection"
+             class="results"
+             aria-labelledby="aiHeading">
+
+        <h2 id="aiHeading">
+            Hỏi chuyên gia AI - Gemma 3 4B
+        </h2>
+
+        <p class="result-summary">
+            Đặt câu hỏi về các loại vải, đặc tính,
+            ưu điểm, nhược điểm hoặc cách chọn
+            chất liệu phù hợp.
+        </p>
+
+        <div class="field">
+            <label for="aiQuestion">
+                Câu hỏi dành cho AI
+            </label>
+
+            <textarea
+                    id="aiQuestion"
+                    maxlength="1000"
+                    placeholder="Ví dụ: Vải cotton và linen khác nhau như thế nào?"></textarea>
+        </div>
+
+        <button type="button" id="aiAskButton">
+            Gửi câu hỏi cho AI
+        </button>
+
+        <div id="aiResult"
+             class="message info"
+             role="status"
+             aria-live="polite"
+             style="white-space: pre-wrap; overflow-wrap: anywhere;"
+             hidden></div>
+
+        <p class="note">
+            Câu trả lời do Gemma 3 4B tạo ra,
+            chỉ mang tính tham khảo.
+            Thông tin kỹ thuật về vải chưa được
+            xác minh độc lập.
+        </p>
+
+    </section>
 
     <section id="results"
              class="results"
@@ -693,6 +739,80 @@
             button.textContent = "Gửi yêu cầu tư vấn";
         }
     });
+
+    // Hỏi AI Gemma 3 4B - độc lập với tư vấn SQLite.
+    const aiQuestion = document.getElementById("aiQuestion");
+    const aiAskButton = document.getElementById("aiAskButton");
+    const aiResult = document.getElementById("aiResult");
+
+    aiAskButton.addEventListener("click", async function () {
+        const question = aiQuestion.value.trim();
+
+        if (!question) {
+            aiResult.textContent = "Vui lòng nhập câu hỏi cho AI.";
+            aiResult.className = "message error";
+            aiResult.hidden = false;
+            return;
+        }
+
+        if (question.length > 1000) {
+            aiResult.textContent = "Câu hỏi không được vượt quá 1000 ký tự.";
+            aiResult.className = "message error";
+            aiResult.hidden = false;
+            return;
+        }
+
+        aiAskButton.disabled = true;
+        aiAskButton.textContent = "Gemma đang trả lời...";
+
+        aiResult.textContent = "Đang gửi câu hỏi đến Gemma 3 4B...";
+        aiResult.className = "message info";
+        aiResult.hidden = false;
+
+        try {
+            const response = await fetch("/api/ai/ask", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json; charset=utf-8"
+                },
+                body: JSON.stringify({
+                    question: question
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    typeof data.error === "string"
+                        ? data.error
+                        : "Không thể nhận câu trả lời từ AI."
+                );
+            }
+
+            if (typeof data.answer !== "string" ||
+                data.answer.trim() === "") {
+                throw new Error("AI chưa trả về câu trả lời hợp lệ.");
+            }
+
+            aiResult.textContent = data.answer;
+            aiResult.className = "message info";
+
+        } catch (error) {
+            console.error("Lỗi hỏi Gemma:", error);
+
+            aiResult.textContent =
+                error.message ||
+                "Không thể kết nối AI. Hãy kiểm tra Ollama và thử lại.";
+
+            aiResult.className = "message error";
+
+        } finally {
+            aiAskButton.disabled = false;
+            aiAskButton.textContent = "Gửi câu hỏi cho AI";
+        }
+    });
+
 </script>
 
 </body>
