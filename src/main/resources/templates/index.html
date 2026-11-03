@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Fabric AI Advisor</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 16px;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #263238;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: auto;
+            padding: 35px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px #00000012;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2563eb;
+        }
+
+        .intro {
+            text-align: center;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .field {
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 14px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .note {
+            margin-top: 18px;
+            color: #64748b;
+            font-size: 13px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .results {
+            margin-top: 35px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+
+        .results h2 {
+            color: #2563eb;
+            font-size: 22px;
+        }
+
+        .result-summary {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .fabric-card {
+            margin-top: 16px;
+            padding: 20px;
+            border: 1px solid #dbe3ef;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .fabric-card h3 {
+            margin: 0 0 12px;
+            color: #1d4ed8;
+            line-height: 1.4;
+        }
+
+        .fabric-card p {
+            margin: 8px 0;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .fabric-card a {
+            color: #2563eb;
+            overflow-wrap: anywhere;
+        }
+
+        .recommendation-score {
+            font-weight: bold;
+            color: #1d4ed8;
+            padding: 10px 12px;
+            background: #eff6ff;
+            border-radius: 8px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 6px;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .error {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .info {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Fabric AI Advisor</h1>
+
+    <p class="intro">
+        Ứng dụng tư vấn chất liệu vải dựa trên
+        nhu cầu người dùng và dữ liệu kỹ thuật.
+    </p>
+
+    <form id="fabricForm">
+
+        <div class="field">
+            <label for="garment">
+                Loại trang phục
+            </label>
+
+            <select id="garment" name="garment" required>
+                <option value="">-- Chọn trang phục --</option>
+                <option value="ao_so_mi">Áo sơ mi</option>
+                <option value="ao_thun">Áo thun</option>
+                <option value="quan_tay">Quần tây</option>
+                <option value="vay">Váy / Đầm</option>
+                <option value="ao_khoac">Áo khoác</option>
+                <option value="khac">Khác</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="preference">
+                Sở thích về chất liệu
+            </label>
+
+            <input
+                    id="preference"
+                    name="preference"
+                    type="text"
+                    placeholder="Ví dụ: thoáng mát, mềm, ít nhăn">
+        </div>
+
+        <div class="field">
+            <label for="budget">
+                Ngân sách tối đa (VNĐ/mét)
+            </label>
+
+            <input
+                    id="budget"
+                    name="budget"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    required
+                    placeholder="Ví dụ: 200000">
+        </div>
+
+        <div class="field">
+            <label for="requirements">
+                Yêu cầu bổ sung
+            </label>
+
+            <textarea
+                    id="requirements"
+                    name="requirements"
+                    maxlength="1000"
+                    placeholder="Nhập thêm nhu cầu của bạn (tối đa 1000 ký tự)..."></textarea>
+        </div>
+
+        <button type="submit" id="submitButton">
+            Gửi yêu cầu tư vấn
+        </button>
+
+    </form>
+
+    <p class="note">
+        Kết quả lọc theo trang phục và giá khởi điểm tham khảo,
+        sau đó xếp hạng sơ bộ theo sở thích dựa trên từ khóa.
+        Yêu cầu bổ sung được trích xuất một số sở thích theo từ khóa;
+        các ý khác có thể chưa được hiểu hoặc xử lý.
+        Dữ liệu vải chưa được xác minh độc lập;
+        hệ thống chưa kết nối mô hình AI.
+    </p>
+
+    <section id="results"
+             class="results"
+             aria-live="polite"
+             hidden>
+
+        <h2>Kết quả tìm kiếm chất liệu vải</h2>
+
+        <p id="resultSummary"
+           class="result-summary"></p>
+
+        <div id="fabricList"></div>
+
+    </section>
+
+    <div id="message"
+         role="status"
+         aria-live="polite"
+         hidden></div>
+
+</div>
+
+<script>
+    const garmentKeywords = {
+        ao_so_mi: "sơ mi",
+        ao_thun: "thun",
+        quan_tay: "quần",
+        vay: "váy",
+        ao_khoac: "áo khoác"
+    };
+
+    const form = document.getElementById("fabricForm");
+    const button = document.getElementById("submitButton");
+    const results = document.getElementById("results");
+    const summary = document.getElementById("resultSummary");
+    const fabricList = document.getElementById("fabricList");
+    const message = document.getElementById("message");
+
+    const moneyFormatter = new Intl.NumberFormat("vi-VN");
+
+    function formatPrice(value) {
+        if (value === null ||
+            value === undefined ||
+            value === "") {
+            return "Chưa có dữ liệu";
+        }
+
+        const number = Number(value);
+
+        if (!Number.isFinite(number)) {
+            return "Chưa có dữ liệu";
+        }
+
+        return moneyFormatter.format(number) + " VNĐ/m";
+    }
+
+    function showMessage(text, isError = false) {
+        message.textContent = text;
+        message.className =
+            "message " + (isError ? "error" : "info");
+        message.hidden = false;
+    }
+
+    function addDetail(parent, label, value) {
+        const p = document.createElement("p");
+
+        const strong = document.createElement("strong");
+        strong.textContent = label + ": ";
+
+        const span = document.createElement("span");
+        span.textContent =
+            value === null ||
+            value === undefined ||
+            value === ""
+                ? "Chưa có dữ liệu"
+                : String(value);
+
+        p.append(strong, span);
+        parent.appendChild(p);
+    }
+
+    function addSource(parent, url) {
+        if (!url) {
+            return;
+        }
+
+        try {
+            const parsed = new URL(url);
+
+            if (!["https:", "http:"].includes(parsed.protocol)) {
+                return;
+            }
+
+            const p = document.createElement("p");
+            const label = document.createElement("strong");
+            label.textContent = "Nguồn tham khảo: ";
+
+            const link = document.createElement("a");
+            link.href = parsed.href;
+            link.textContent = parsed.hostname;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+
+            p.append(label, link);
+            parent.appendChild(p);
+
+        } catch (error) {
+            console.warn("URL nguồn không hợp lệ:", error);
+        }
+    }
+
+
+    function createFabricCard(fabric) {
+        const card = document.createElement("article");
+        card.className = "fabric-card";
+
+        const title = document.createElement("h3");
+        title.textContent =
+            (fabric.fabric_id || "Không có mã") +
+            " - " +
+            (fabric.fabric_name || "Chưa có tên");
+
+        card.appendChild(title);
+
+        // Điểm xếp hạng mới: hỗ trợ - cảnh báo
+        if (
+            fabric.ranking_score !== null &&
+            fabric.ranking_score !== undefined &&
+            Number.isFinite(Number(fabric.ranking_score))
+        ) {
+            const ranking = document.createElement("p");
+            ranking.className = "recommendation-score";
+
+            ranking.textContent =
+                "Điểm xếp hạng đề xuất: " +
+                Number(fabric.ranking_score);
+
+            card.appendChild(ranking);
+
+            addDetail(
+                card,
+                "Cách tính điểm xếp hạng",
+                "Số sở thích có bằng chứng hỗ trợ " +
+                "trừ số sở thích có cảnh báo"
+            );
+        }
+
+        // Giải thích riêng cho từng mẫu vải từ API
+        if (typeof fabric.recommendation_reason === "string" &&
+            fabric.recommendation_reason.trim() !== "") {
+            addDetail(
+                card,
+                "Lý do đề xuất",
+                fabric.recommendation_reason
+            );
+        }
+
+        // Giữ lại điểm khớp sở thích cũ
+        if (
+            fabric.match_score !== null &&
+            fabric.match_score !== undefined &&
+            Number.isFinite(Number(fabric.match_score))
+        ) {
+            addDetail(
+                card,
+                "Điểm khớp sở thích sơ bộ",
+                Number(fabric.match_score) +
+                " (số sở thích có bằng chứng hỗ trợ)"
+            );
+        }
+
+        function addPreferenceList(label, items) {
+            const value =
+                Array.isArray(items) && items.length > 0
+                    ? items.join(", ")
+                    : "Không có";
+
+            addDetail(card, label, value);
+        }
+
+        addPreferenceList(
+            "Sở thích có bằng chứng hỗ trợ",
+            fabric.matched_preferences
+        );
+
+        addPreferenceList(
+            "Sở thích có cảnh báo",
+            fabric.caution_preferences
+        );
+
+        addPreferenceList(
+            "Sở thích chưa đủ thông tin",
+            fabric.unknown_preferences
+        );
+
+        addDetail(
+            card,
+            "Thành phần sợi",
+            fabric.fiber_composition
+        );
+
+        addDetail(
+            card,
+            "Cấu trúc vải",
+            fabric.construction
+        );
+
+        addDetail(
+            card,
+            "Khoảng GSM",
+            fabric.gsm_range
+        );
+
+        addDetail(
+            card,
+            "Khổ vải tham khảo",
+            fabric.typical_width
+        );
+
+        const minPrice = formatPrice(
+            fabric.price_min_vnd_per_m
+        );
+
+        const maxPrice = formatPrice(
+            fabric.price_max_vnd_per_m
+        );
+
+        addDetail(
+            card,
+            "Khoảng giá tham khảo",
+            minPrice + " - " + maxPrice
+        );
+
+        addDetail(
+            card,
+            "Trang phục phù hợp theo dữ liệu",
+            fabric.recommended_garments
+        );
+
+        addDetail(
+            card,
+            "Đặc tính và lưu ý",
+            fabric.properties_and_cautions
+        );
+
+        const status = document.createElement("p");
+        const badge = document.createElement("span");
+        badge.className = "status";
+
+        badge.textContent =
+            fabric.verification_status === "verified"
+                ? "Trạng thái dữ liệu: verified"
+                : "Dữ liệu chưa được xác minh độc lập";
+
+        status.appendChild(badge);
+        card.appendChild(status);
+
+        addSource(card, fabric.source_url);
+
+        return card;
+    }
+
+
+    function displayResults(data, garment, budget, preference) {
+        fabricList.replaceChildren();
+        message.hidden = true;
+        results.hidden = false;
+
+        const fabrics = Array.isArray(data.fabrics)
+            ? data.fabrics
+            : [];
+
+        summary.textContent =
+            "Tìm thấy " + fabrics.length +
+            " mẫu vải cho \"" + garment +
+            "\" với ngân sách tối đa " +
+            moneyFormatter.format(budget) +
+            " VNĐ/mét (lọc theo giá khởi điểm). " +
+            (preference.trim()
+                ? "Xếp hạng sơ bộ theo sở thích: " + preference + ". "
+                : "Chưa nhập sở thích, các mẫu không có điểm ưu tiên. ") +
+            "Điểm số dựa trên quy tắc từ khóa, không phải đánh giá kỹ thuật đã xác minh.";
+
+        if (fabrics.length === 0) {
+            const empty = document.createElement("p");
+            empty.textContent =
+                "Chưa tìm thấy mẫu vải phù hợp " +
+                "với điều kiện hiện tại.";
+
+            fabricList.appendChild(empty);
+            return;
+        }
+
+        for (const fabric of fabrics) {
+            fabricList.appendChild(
+                createFabricCard(fabric)
+            );
+        }
+    }
+
+    form.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        results.hidden = true;
+        fabricList.replaceChildren();
+        message.hidden = true;
+
+        const garmentCode =
+            document.getElementById("garment").value;
+
+        const budgetValue =
+            document.getElementById("budget").value;
+
+        const preference =
+            document.getElementById("preference").value.trim();
+
+        const requirements =
+            document.getElementById("requirements").value.trim();
+
+        const budget = Number(budgetValue);
+        const garment = garmentKeywords[garmentCode];
+
+        if (!garment) {
+            showMessage(
+                "Loại trang phục này chưa được hỗ trợ " +
+                "trong bộ lọc hiện tại.",
+                true
+            );
+            return;
+        }
+
+        if (budgetValue.trim() === "" ||
+            !Number.isFinite(budget) ||
+            budget < 0) {
+
+            showMessage(
+                "Vui lòng nhập ngân sách hợp lệ.",
+                true
+            );
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Đang tư vấn...";
+        showMessage("Đang lấy dữ liệu và xếp hạng sơ bộ...");
+
+        try {
+            const params = new URLSearchParams({
+                garment: garment,
+                budget: String(budget),
+                preference: preference,
+                requirements: requirements
+            });
+
+            const response = await fetch(
+                "/api/recommendations?" + params.toString(),
+                { method: "GET" }
+            );
+
+
+            if (!response.ok) {
+                let errorMessage =
+                    "Không thể xử lý yêu cầu (HTTP " +
+                    response.status + ").";
+
+                try {
+                    const errorData = await response.json();
+
+                    if (typeof errorData.error === "string" &&
+                        errorData.error.trim() !== "") {
+
+                        errorMessage = errorData.error;
+                    }
+                } catch (parseError) {
+                    console.warn(
+                        "Không đọc được thông báo lỗi từ API:",
+                        parseError
+                    );
+                }
+
+                throw new Error(errorMessage);
+            }
+
+            const data = await response.json();
+
+            if (!Array.isArray(data.fabrics)) {
+                throw new Error(
+                    "Dữ liệu API không đúng định dạng"
+                );
+            }
+
+            displayResults(
+                data,
+                garment,
+                budget,
+                typeof data.combined_preference === "string"
+                    ? data.combined_preference
+                    : preference
+            );
+
+            if (requirements !== "") {
+                const extracted = Array.isArray(data.extracted_preferences)
+                    ? data.extracted_preferences
+                    : [];
+
+                const extractionNote = document.createElement("p");
+                extractionNote.className = "result-summary";
+                extractionNote.textContent = extracted.length > 0
+                    ? "Sở thích nhận diện từ yêu cầu bổ sung: " +
+                    extracted.join(", ") +
+                    ". Những ý khác trong yêu cầu có thể chưa được xử lý."
+                    : "Chưa nhận diện được sở thích hỗ trợ từ yêu cầu bổ sung; " +
+                    "các ý trong ô này chưa được dùng để chấm điểm.";
+                fabricList.prepend(extractionNote);
+            }
+
+            console.log(
+                "Kết quả tư vấn sơ bộ từ SQLite:",
+                data
+            );
+
+        } catch (error) {
+            console.error("Lỗi tìm kiếm vải:", error);
+
+
+            showMessage(
+                error.message ||
+                "Không lấy được dữ liệu từ Spring Boot. Hãy thử lại.",
+                true
+            );
+
+
+        } finally {
+            button.disabled = false;
+            button.textContent = "Gửi yêu cầu tư vấn";
+        }
+    });
+</script>
+
+</body>
+</html>
