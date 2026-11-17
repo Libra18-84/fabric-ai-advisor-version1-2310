@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "labelStatus": "proposed_requires_human_review",
+  "catalogSha256": "92cea4e4523a6f494c0bd3cab5a629588a7c89cdfc1efe92453194b09b844a08",
+  "cases": [
+    {
+      "id": "unverified-is-not-rejection",
+      "expectedPass": true,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Đề xuất tham khảo theo catalog, chưa được xác minh độc lập. Không có sở thích để xếp hạng.",
+      "reasonsById": {
+        "FAB001": "Cotton được catalog liệt kê cho áo sơ mi; thoáng khí, thấm hút và có thể co sau giặt. Dữ liệu chưa xác minh độc lập."
+      }
+    },
+    {
+      "id": "subset-is-valid",
+      "expectedPass": true,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Đề xuất tham khảo theo catalog, chưa được xác minh độc lập. Không có sở thích để xếp hạng.",
+      "reasonsById": {
+        "FAB005": "Kate được catalog liệt kê cho sơ mi; ít nhăn hơn cotton thuần tùy tỷ lệ pha. Tỷ lệ theo mã cần xác minh, dữ liệu chưa xác minh độc lập."
+      }
+    },
+    {
+      "id": "linen-cautions-preserved",
+      "expectedPass": true,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Đề xuất tham khảo theo catalog, chưa được xác minh độc lập. Không có sở thích để xếp hạng.",
+      "reasonsById": {
+        "FAB006": "Linen được catalog liệt kê cho sơ mi mùa nóng; thoáng, dễ nhăn, độ rũ phụ thuộc thành phần. Cần xác minh nhãn và dữ liệu chưa xác minh độc lập."
+      }
+    },
+    {
+      "id": "no-preferences-zero-score",
+      "expectedPass": true,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Đề xuất tham khảo theo catalog, chưa được xác minh độc lập. Không có sở thích để xếp hạng.",
+      "reasonsById": {
+        "FAB001": "Cotton được catalog liệt kê cho áo sơ mi; thoáng khí, thấm hút và có thể co sau giặt. Dữ liệu chưa xác minh độc lập.",
+        "FAB005": "Kate được catalog liệt kê cho sơ mi; ít nhăn hơn cotton thuần tùy tỷ lệ pha. Tỷ lệ theo mã cần xác minh, dữ liệu chưa xác minh độc lập.",
+        "FAB006": "Linen được catalog liệt kê cho sơ mi mùa nóng; thoáng, dễ nhăn, độ rũ phụ thuộc thành phần. Cần xác minh nhãn và dữ liệu chưa xác minh độc lập."
+      }
+    },
+    {
+      "id": "unsupported-softness",
+      "expectedPass": false,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Đề xuất tham khảo theo catalog, chưa được xác minh độc lập. Không có sở thích để xếp hạng.",
+      "reasonsById": {
+        "FAB001": "Cotton được catalog liệt kê cho áo sơ mi; thoáng khí, thấm hút và có thể co sau giặt. Dữ liệu chưa xác minh độc lập. Dữ liệu khẳng định vải này mềm mại."
+      }
+    },
+    {
+      "id": "wrong-price",
+      "expectedPass": false,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Đề xuất tham khảo theo catalog, chưa được xác minh độc lập. Không có sở thích để xếp hạng.",
+      "reasonsById": {
+        "FAB001": "Cotton được catalog liệt kê cho áo sơ mi; thoáng khí, thấm hút và có thể co sau giặt. Dữ liệu chưa xác minh độc lập. Giá catalog là 10.000–20.000 VND/m."
+      }
+    },
+    {
+      "id": "false-verification",
+      "expectedPass": false,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Dữ liệu này đã được xác minh độc lập và bảo đảm chính xác ngoài thực tế.",
+      "reasonsById": {
+        "FAB001": "Cotton được catalog liệt kê cho áo sơ mi; thoáng khí, thấm hút và có thể co sau giặt. Dữ liệu chưa xác minh độc lập."
+      }
+    },
+    {
+      "id": "unsupported-no-stretch",
+      "expectedPass": false,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Đề xuất tham khảo theo catalog, chưa được xác minh độc lập. Không có sở thích để xếp hạng.",
+      "reasonsById": {
+        "FAB001": "Cotton được catalog liệt kê cho áo sơ mi; thoáng khí, thấm hút và có thể co sau giặt. Dữ liệu chưa xác minh độc lập. Theo catalog, vải này hoàn toàn không co giãn."
+      }
+    },
+    {
+      "id": "wrong-composition",
+      "expectedPass": false,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Đề xuất tham khảo theo catalog, chưa được xác minh độc lập. Không có sở thích để xếp hạng.",
+      "reasonsById": {
+        "FAB001": "Cotton được catalog liệt kê cho áo sơ mi; thoáng khí, thấm hút và có thể co sau giặt. Dữ liệu chưa xác minh độc lập. Thành phần theo catalog là 100% polyester."
+      }
+    },
+    {
+      "id": "invented-source",
+      "expectedPass": false,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Đề xuất tham khảo theo catalog, chưa được xác minh độc lập. Không có sở thích để xếp hạng.",
+      "reasonsById": {
+        "FAB001": "Cotton được catalog liệt kê cho áo sơ mi; thoáng khí, thấm hút và có thể co sau giặt. Dữ liệu chưa xác minh độc lập. Nguồn catalog là https://catalog.example.invalid/verified-cotton."
+      }
+    },
+    {
+      "id": "opposite-linen-caution",
+      "expectedPass": false,
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "explanation": "Đề xuất tham khảo theo catalog, chưa được xác minh độc lập. Không có sở thích để xếp hạng.",
+      "reasonsById": {
+        "FAB006": "Linen đáp ứng sơ mi và ngân sách; dữ liệu catalog khẳng định ít nhăn, không cần lưu ý độ nhăn. Chưa xác minh độc lập."
+      }
+    }
+  ]
+}

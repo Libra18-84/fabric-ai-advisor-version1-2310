@@ -249,13 +249,13 @@
     </form>
 
     <p class="note">
-        Kết quả lọc theo trang phục và giá khởi điểm tham khảo,
+        Kết quả lọc theo trang phục và toàn bộ khoảng giá tham khảo,
         sau đó xếp hạng sơ bộ theo sở thích dựa trên từ khóa.
         Yêu cầu bổ sung được trích xuất một số sở thích theo từ khóa;
         các ý khác có thể chưa được hiểu hoặc xử lý.
         Dữ liệu vải chưa được xác minh độc lập;
         Chức năng tư vấn chất liệu sử dụng quy tắc từ khóa;
-        tính năng hỏi AI được cung cấp riêng bên dưới.
+        Ô tư vấn AI bên dưới dùng điều kiện trích xuất để truy vấn cùng catalog SQLite, giải thích và kiểm chứng kết quả.
     </p>
 
     <section id="aiSection"
@@ -263,7 +263,7 @@
              aria-labelledby="aiHeading">
 
         <h2 id="aiHeading">
-            Hỏi chuyên gia AI - Gemma 3 4B
+            Tư vấn vải bằng AI
         </h2>
 
         <p class="result-summary">
@@ -295,7 +295,7 @@
              hidden></div>
 
         <p class="note">
-            Câu trả lời do Gemma 3 4B tạo ra,
+            Kết quả tư vấn dựa trên dữ liệu hiện có,
             chỉ mang tính tham khảo.
             Thông tin kỹ thuật về vải chưa được
             xác minh độc lập.
@@ -328,7 +328,7 @@
     const garmentKeywords = {
         ao_so_mi: "sơ mi",
         ao_thun: "thun",
-        quan_tay: "quần",
+        quan_tay: "quần tây",
         vay: "váy",
         ao_khoac: "áo khoác"
     };
@@ -414,7 +414,7 @@
     }
 
 
-    function createFabricCard(fabric) {
+    function createFabricCard(fabric, candidateOnly = false) {
         const card = document.createElement("article");
         card.className = "fabric-card";
 
@@ -454,7 +454,7 @@
             fabric.recommendation_reason.trim() !== "") {
             addDetail(
                 card,
-                "Lý do đề xuất",
+                candidateOnly ? "Thông tin cần xác nhận" : "Lý do đề xuất",
                 fabric.recommendation_reason
             );
         }
@@ -570,35 +570,43 @@
         message.hidden = true;
         results.hidden = false;
 
-        const fabrics = Array.isArray(data.fabrics)
-            ? data.fabrics
-            : [];
+        const unconfirmed = data.status === "insufficient_data";
+        const fabrics = unconfirmed && Array.isArray(data.candidates)
+            ? data.candidates : Array.isArray(data.fabrics) ? data.fabrics : [];
 
         summary.textContent =
             "Tìm thấy " + fabrics.length +
             " mẫu vải cho \"" + garment +
             "\" với ngân sách tối đa " +
             moneyFormatter.format(budget) +
-            " VNĐ/mét (lọc theo giá khởi điểm). " +
+            " VNĐ/mét (toàn bộ khoảng giá nằm trong ngân sách). " +
             (preference.trim()
                 ? "Xếp hạng sơ bộ theo sở thích: " + preference + ". "
                 : "Chưa nhập sở thích, các mẫu không có điểm ưu tiên. ") +
             "Điểm số dựa trên quy tắc từ khóa, không phải đánh giá kỹ thuật đã xác minh.";
 
+        if (unconfirmed || data.status === "needs_clarification") {
+            summary.textContent = typeof data.explanation === "string"
+                ? data.explanation : "Chưa đủ thông tin để xác nhận điều kiện bắt buộc.";
+        }
+
         if (fabrics.length === 0) {
             const empty = document.createElement("p");
-            empty.textContent =
-                "Chưa tìm thấy mẫu vải phù hợp " +
-                "với điều kiện hiện tại.";
+            empty.textContent = typeof data.explanation === "string" ? data.explanation
+                : "Chưa tìm thấy mẫu vải phù hợp với điều kiện hiện tại.";
 
             fabricList.appendChild(empty);
             return;
         }
 
         for (const fabric of fabrics) {
-            fabricList.appendChild(
-                createFabricCard(fabric)
-            );
+            const card = createFabricCard(fabric);
+            if (unconfirmed) {
+                const label = document.createElement("p");
+                label.textContent = "Ứng viên tham khảo — chưa xác nhận đáp ứng điều kiện bắt buộc.";
+                card.prepend(label);
+            }
+            fabricList.appendChild(card);
         }
     }
 
@@ -740,43 +748,174 @@
         }
     });
 
-    // Hỏi AI Gemma 3 4B - độc lập với tư vấn SQLite.
+    // Tư vấn AI sử dụng dữ liệu SQLite qua /api/advise.
     const aiQuestion = document.getElementById("aiQuestion");
     const aiAskButton = document.getElementById("aiAskButton");
     const aiResult = document.getElementById("aiResult");
 
-    aiAskButton.addEventListener("click", async function () {
-        const question = aiQuestion.value.trim();
+    function addAdviceText(parent, tag, text) {
+        const element = document.createElement(tag);
+        element.textContent = text;
+        parent.appendChild(element);
+        return element;
+    }
 
-        if (!question) {
-            aiResult.textContent = "Vui lòng nhập câu hỏi cho AI.";
-            aiResult.className = "message error";
-            aiResult.hidden = false;
-            return;
+    function renderAdvice(data) {
+        if (!data
+            || !Array.isArray(data.recommendations)
+            || typeof data.explanation !== "string") {
+            throw new Error("Phản hồi tư vấn không đúng định dạng.");
         }
 
-        if (question.length > 1000) {
-            aiResult.textContent = "Câu hỏi không được vượt quá 1000 ký tự.";
+        const labels = {
+            success: "Đã đối chiếu câu trả lời với dữ liệu catalog",
+            draft: "Bản nháp — chưa kiểm chứng",
+            fallback: "Kết quả bằng quy tắc — chưa kiểm chứng đầy đủ",
+            needs_clarification: "Cần bổ sung thông tin",
+            no_results: "Chưa tìm thấy vải phù hợp",
+            insufficient_data: "Chưa đủ dữ liệu để xác nhận",
+            validation_failed: "Chưa thể xác nhận câu trả lời"
+        };
+
+        if (!Object.prototype.hasOwnProperty.call(labels, data.status)) {
+            throw new Error("Trạng thái tư vấn không được hỗ trợ.");
+        }
+
+        const factCheck = data.factCheck || {};
+
+        const passed = data.status === "success"
+            && factCheck.validated === true
+            && factCheck.rulesPassed === true
+            && factCheck.evaluationStatus === "passed";
+
+        if (data.status === "success" && !passed) {
+            throw new Error(
+                "Kết quả chưa có xác nhận kiểm chứng hợp lệ."
+            );
+        }
+
+        aiResult.replaceChildren();
+        aiResult.hidden = false;
+        aiResult.className = data.status === "validation_failed"
+            ? "message error"
+            : "message info";
+
+        addAdviceText(aiResult, "h3", labels[data.status]);
+        addAdviceText(aiResult, "p", data.explanation);
+
+        if (["success", "draft", "fallback"].includes(data.status)) {
+            for (const item of data.recommendations) {
+                if (!item
+                    || !item.fabric
+                    || typeof item.reason !== "string") {
+                    throw new Error(
+                        "Dữ liệu đề xuất không đúng định dạng."
+                    );
+                }
+
+                // Dùng lại hàm tạo thẻ vải hiện có.
+                const card = createFabricCard({
+                    ...item.fabric,
+                    recommendation_reason: item.reason,
+                    ranking_score: item.rankingScore,
+                    matched_preferences: item.matchedPreferences,
+                    caution_preferences: item.cautionPreferences,
+                    unknown_preferences: item.unknownPreferences
+                });
+
+                aiResult.appendChild(card);
+            }
+        }
+
+        if (data.status === "insufficient_data") {
+            addAdviceText(
+                aiResult,
+                "h3",
+                "Ứng viên theo trang phục và ngân sách"
+            );
+
+            if (!Array.isArray(data.candidates)) {
+                throw new Error(
+                    "Danh sách ứng viên không đúng định dạng."
+                );
+            }
+
+            for (const item of data.candidates) {
+                if (!item
+                    || !item.fabric
+                    || typeof item.reason !== "string") {
+                    throw new Error(
+                        "Dữ liệu ứng viên không đúng định dạng."
+                    );
+                }
+
+                aiResult.appendChild(createFabricCard({
+                    ...item.fabric,
+                    recommendation_reason: item.reason,
+                    matched_preferences: item.matchedPreferences,
+                    caution_preferences: item.cautionPreferences,
+                    unknown_preferences: item.unknownPreferences
+                }, true));
+            }
+        }
+
+        if (factCheck.evaluationStatus === "unavailable") {
+            addAdviceText(
+                aiResult,
+                "p",
+                "Model kiểm chứng hiện không khả dụng."
+            );
+        }
+
+        if (Array.isArray(factCheck.issues)
+            && factCheck.issues.length > 0) {
+
+            const list = document.createElement("ul");
+
+            for (const issue of factCheck.issues) {
+                if (typeof issue === "string") {
+                    addAdviceText(list, "li", issue);
+                }
+            }
+
+            aiResult.appendChild(list);
+        }
+
+        if (typeof data.notice === "string") {
+            addAdviceText(aiResult, "p", data.notice);
+        }
+    }
+
+    aiAskButton.addEventListener("click", async function () {
+        const query = aiQuestion.value.trim();
+
+        if (!query || query.length > 1000) {
+            aiResult.textContent =
+                "Câu hỏi phải có từ 1 đến 1000 ký tự.";
             aiResult.className = "message error";
             aiResult.hidden = false;
             return;
         }
 
         aiAskButton.disabled = true;
-        aiAskButton.textContent = "Gemma đang trả lời...";
+        aiAskButton.textContent = "Đang tư vấn...";
 
-        aiResult.textContent = "Đang gửi câu hỏi đến Gemma 3 4B...";
+        aiResult.textContent =
+            "Đang tìm dữ liệu phù hợp và đối chiếu câu trả lời...";
         aiResult.className = "message info";
         aiResult.hidden = false;
 
         try {
-            const response = await fetch("/api/ai/ask", {
+            const response = await fetch("/api/advise", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json; charset=utf-8"
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    question: question
+                    query: query,
+                    userPreferences: {
+                        language: "vi"
+                    }
                 })
             });
 
@@ -786,33 +925,23 @@
                 throw new Error(
                     typeof data.error === "string"
                         ? data.error
-                        : "Không thể nhận câu trả lời từ AI."
+                        : "Không thể xử lý yêu cầu tư vấn."
                 );
             }
 
-            if (typeof data.answer !== "string" ||
-                data.answer.trim() === "") {
-                throw new Error("AI chưa trả về câu trả lời hợp lệ.");
-            }
-
-            aiResult.textContent = data.answer;
-            aiResult.className = "message info";
+            renderAdvice(data);
 
         } catch (error) {
-            console.error("Lỗi hỏi Gemma:", error);
-
             aiResult.textContent =
-                error.message ||
-                "Không thể kết nối AI. Hãy kiểm tra Ollama và thử lại.";
-
+                error.message || "Không thể nhận kết quả tư vấn.";
             aiResult.className = "message error";
+            aiResult.hidden = false;
 
         } finally {
             aiAskButton.disabled = false;
-            aiAskButton.textContent = "Gửi câu hỏi cho AI";
+            aiAskButton.textContent = "Gửi yêu cầu tư vấn AI";
         }
     });
-
 </script>
 
 </body>

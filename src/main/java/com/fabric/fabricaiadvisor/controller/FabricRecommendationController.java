@@ -4,6 +4,10 @@ package com.fabric.fabricaiadvisor.controller;
 import com.fabric.fabricaiadvisor.service.FabricRecommendationService;
 import com.fabric.fabricaiadvisor.service.FabricRequirementService;
 import com.fabric.fabricaiadvisor.service.FabricPreferenceNormalizer;
+import com.fabric.fabricaiadvisor.service.FabricConstraintService;
+import com.fabric.fabricaiadvisor.service.FabricEvidenceService;
+import com.fabric.fabricaiadvisor.dto.FabricCriteria;
+import java.math.BigDecimal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -106,9 +110,36 @@ public class FabricRecommendationController {
                         combinedPreference
                 );
 
+        var criteria = FabricConstraintService.guard(
+                requirements + "; " + preference,
+                new FabricCriteria("recommend_fabric", garment, BigDecimal.valueOf(budget),
+                        true, normalizedPreferences, false, null));
+        var assessment = new FabricEvidenceService(recommendationService)
+                .assessRequired(fabrics, criteria.requiredProperties());
+        String status;
+        String explanation;
+        if (criteria.needsClarification()) {
+            status = "needs_clarification";
+            explanation = criteria.clarificationQuestion();
+            fabrics = List.of();
+        } else {
+            fabrics = assessment.eligible();
+            status = !fabrics.isEmpty() ? "rule_based"
+                    : !assessment.uncertain().isEmpty() ? "insufficient_data" : "no_results";
+            explanation = status.equals("insufficient_data")
+                    ? "Chưa đủ bằng chứng cho điều kiện bắt buộc: " + String.join(", ", assessment.missing())
+                    : status.equals("no_results") ? "Không có vải đáp ứng bộ lọc và điều kiện bắt buộc."
+                    : "Kết quả bằng quy tắc từ dữ liệu hiện có, chưa qua model kiểm chứng.";
+        }
+
         Map<String, Object> response =
                 new LinkedHashMap<>();
 
+        response.put("status", status);
+        response.put("criteria", criteria);
+        response.put("explanation", explanation);
+        response.put("candidates", "insufficient_data".equals(status) ? assessment.uncertain() : List.of());
+        response.put("missingProperties", assessment.missing());
         response.put("garment", garment);
         response.put("budget", budget);
         response.put("preference", preference);

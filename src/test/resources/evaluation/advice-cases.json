@@ -1,0 +1,19 @@
+{
+  "schemaVersion":1,
+  "labelStatus":"proposed_requires_human_review",
+  "catalogSha256":"92cea4e4523a6f494c0bd3cab5a629588a7c89cdfc1efe92453194b09b844a08",
+  "cases":[
+    {"id":"basic","query":"Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.","expected":{"status":"success","allowedIds":["FAB001","FAB005","FAB006"],"garment":"sơ mi","budget":200000,"inclusive":true,"preferences":[],"requiredProperties":[]}},
+    {"id":"inclusive-boundary","query":"Tôi cần vải may áo sơ mi, tối đa 90.000 đồng/m.","expected":{"status":"success","allowedIds":["FAB001","FAB005"],"garment":"sơ mi","budget":90000,"inclusive":true,"preferences":[],"requiredProperties":[]}},
+    {"id":"strict-boundary","query":"Tôi cần vải may áo sơ mi, dưới 90.000 đồng/m.","expected":{"status":"success","allowedIds":["FAB005"],"garment":"sơ mi","budget":90000,"inclusive":false,"preferences":[],"requiredProperties":[]}},
+    {"id":"soft-unknown","query":"Tôi cần vải may áo sơ mi, ưu tiên mềm, không quá 200.000 đồng/m.","expected":{"status":"insufficient_data","allowedIds":["FAB001","FAB005","FAB006"],"garment":"sơ mi","budget":200000,"inclusive":true,"preferences":["mềm"],"requiredProperties":[],"missing":["mềm"]}},
+    {"id":"hard-unknown","query":"Tôi cần vải may áo sơ mi, bắt buộc mềm, không quá 200.000 đồng/m.","expected":{"status":"insufficient_data","allowedIds":["FAB001","FAB005","FAB006"],"garment":"sơ mi","budget":200000,"inclusive":true,"preferences":[],"requiredProperties":["mềm"],"missing":["mềm"]}},
+    {"id":"negative-property","query":"Tôi cần vải may áo sơ mi không co giãn, không quá 200.000 đồng/m.","expected":{"status":"insufficient_data","allowedIds":["FAB001","FAB005","FAB006"],"garment":"sơ mi","budget":200000,"inclusive":true,"preferences":[],"requiredProperties":["không co giãn"],"missing":["không co giãn"]}},
+    {"id":"no-stretch-requirement","query":"Tôi cần vải may áo sơ mi, không cần co giãn, không quá 200.000 đồng/m.","expected":{"status":"success","allowedIds":["FAB001","FAB005","FAB006"],"garment":"sơ mi","budget":200000,"inclusive":true,"preferences":[],"requiredProperties":[]}},
+    {"id":"no-budget-match","query":"Tôi cần vải may áo sơ mi, tối đa 1 đồng/m.","expected":{"status":"no_results","allowedIds":[],"garment":"sơ mi","budget":1,"inclusive":true,"preferences":[],"requiredProperties":[]}},
+    {"id":"missing-garment","query":"Tôi cần vải giá không quá 200.000 đồng/m.","expected":{"status":"needs_clarification","allowedIds":[]}},
+    {"id":"missing-budget","query":"Tôi cần vải may áo sơ mi.","expected":{"status":"needs_clarification","allowedIds":[]}},
+    {"id":"total-budget","query":"Tôi cần vải may áo sơ mi, tổng ngân sách mua vải là 200.000 đồng.","expected":{"status":"needs_clarification","allowedIds":[]}},
+    {"id":"foreign-currency","query":"Tôi cần vải may áo sơ mi, không quá 10 USD/m.","expected":{"status":"needs_clarification","allowedIds":[]}}
+  ]
+}

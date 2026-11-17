@@ -1,0 +1,21 @@
+{
+  "revision": "llamacpp-v1",
+  "active": {
+    "main": "main-llama",
+    "evaluation": "eval-llama"
+  },
+  "models": {
+    "main-llama": {
+      "provider": "llamacpp",
+      "endpoint": "http://127.0.0.1:8081",
+      "model": "gemma-main",
+      "readTimeoutSeconds": 240
+    },
+    "eval-llama": {
+      "provider": "llamacpp",
+      "endpoint": "http://127.0.0.1:8082",
+      "model": "qwen-eval",
+      "readTimeoutSeconds": 240
+    }
+  }
+}

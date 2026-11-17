@@ -33,13 +33,27 @@ public class FabricPreferenceNormalizer {
     public String normalizePreference(String preference) {
         String text = normalizeText(preference);
 
-        return switch (text) {
+        // "Không cần" không có nghĩa là muốn đặc tính ngược lại.
+        if (text.matches(
+                "^khong (?:can|yeu cau|bat buoc|nhat thiet)\\b.*")) {
+            return "";
+        }
+
+        if (text.equals("khong de nhan")) return "ít nhăn";
+
+        boolean negative = text.startsWith("khong ");
+
+        if (negative) {
+            text = text.substring("khong ".length()).trim();
+        }
+
+        String normalized = switch (text) {
             case "mem", "mem mai", "em ai" -> "mềm";
 
-            case "thoang mat", "thoang khi",
-                 "thong thoang" -> "thoáng mát";
+            case "thoang", "thoang mat", "thoang khi",
+                 "thong thoang", "mat me" -> "thoáng mát";
 
-            case "it nhan", "chong nhan" -> "ít nhăn";
+            case "it nhan", "chong nhan", "han che nhan" -> "ít nhăn";
 
             case "co gian", "dan hoi" -> "co giãn";
 
@@ -47,6 +61,8 @@ public class FabricPreferenceNormalizer {
 
             default -> text;
         };
+
+        return negative ? "không " + normalized : normalized;
     }
 
     public List<String> normalizePreferences(

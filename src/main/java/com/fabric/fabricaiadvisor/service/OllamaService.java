@@ -1,77 +1,160 @@
-
 package com.fabric.fabricaiadvisor.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
-@Service
-public class OllamaService {
+public class OllamaService implements AiModelClient {
 
-    private static final String OLLAMA_URL =
-            "http://localhost:11434";
-
-    private static final String MODEL_NAME =
-            "gemma3:4b";
+    private static final HttpClient HTTP = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
 
     private final RestClient restClient;
+    private final RestClient healthClient;
+    private final String modelName;
 
-    // Constructor dùng khi Spring Boot chạy ứng dụng.
-    @Autowired
-    public OllamaService() {
-        this(createDefaultRestClient());
+    public OllamaService(String endpoint, String modelName) {
+        this(endpoint, modelName, Duration.ofSeconds(120));
     }
 
-    // Constructor dùng để truyền HTTP client giả lập khi kiểm thử.
+    public OllamaService(
+            String endpoint,
+            String modelName,
+            Duration readTimeout) {
+
+        this(
+                createDefaultRestClient(endpoint, readTimeout),
+                modelName,
+                createDefaultRestClient(
+                        endpoint,
+                        Duration.ofSeconds(5)
+                )
+        );
+    }
+
+    public OllamaService() {
+        this("http://localhost:11434", "gemma3:4b");
+    }
+
     public OllamaService(RestClient restClient) {
-        if (restClient == null) {
+        this(restClient, "gemma3:4b");
+    }
+
+    public OllamaService(RestClient restClient, String modelName) {
+        this(restClient, modelName, restClient);
+    }
+
+    private OllamaService(
+            RestClient restClient,
+            String modelName,
+            RestClient healthClient) {
+
+        if (restClient == null
+                || modelName == null
+                || modelName.isBlank()) {
+
             throw new IllegalArgumentException(
-                    "RestClient không được để trống."
+                    "HTTP client hoặc tên model không hợp lệ."
             );
         }
 
         this.restClient = restClient;
+        this.healthClient = healthClient;
+        this.modelName = modelName;
     }
 
-    private static RestClient createDefaultRestClient() {
+    private static RestClient createDefaultRestClient(
+            String endpoint,
+            Duration readTimeout) {
 
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .build();
+        if (readTimeout == null
+                || readTimeout.isZero()
+                || readTimeout.isNegative()) {
 
-        JdkClientHttpRequestFactory requestFactory =
-                new JdkClientHttpRequestFactory(httpClient);
+            throw new IllegalArgumentException(
+                    "Thời gian chờ phải lớn hơn 0."
+            );
+        }
 
-        requestFactory.setReadTimeout(
-                Duration.ofSeconds(120)
-        );
+        var factory = new JdkClientHttpRequestFactory(HTTP);
+        factory.setReadTimeout(readTimeout);
 
         return RestClient.builder()
-                .baseUrl(OLLAMA_URL)
-                .requestFactory(requestFactory)
+                .baseUrl(endpoint)
+                .requestFactory(factory)
                 .build();
     }
 
     public String generateAnswer(String question) {
+        requireText(question);
 
-        if (question == null || question.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Câu hỏi không được để trống."
-            );
-        }
-
-        Map<String, Object> requestBody = Map.of(
-                "model", MODEL_NAME,
+        return send(Map.of(
+                "model", modelName,
                 "prompt", question,
                 "stream", false
-        );
+        ));
+    }
 
+    @Override
+    public String generateJson(String systemPrompt, String question) {
+        requireText(systemPrompt);
+        requireText(question);
+
+        return send(Map.of(
+                "model", modelName,
+                "system", systemPrompt,
+                "prompt", question,
+                "format", "json",
+                "stream", false,
+                "options", Map.of("temperature", 0)
+        ));
+    }
+
+    @Override
+    public String getModelName() {
+        return modelName;
+    }
+
+    @Override
+    public void checkAvailability() {
+        Map<?, ?> response = healthClient.get()
+                .uri("/api/tags")
+                .retrieve()
+                .body(Map.class);
+
+        if (response != null
+                && response.get("models") instanceof List<?> models) {
+
+            String tagged = modelName.contains(":")
+                    ? modelName
+                    : modelName + ":latest";
+
+            for (Object item : models) {
+                if (item instanceof Map<?, ?> row) {
+                    for (String field : List.of("name", "model")) {
+                        Object name = row.get(field);
+
+                        if (modelName.equals(name)
+                                || tagged.equals(name)) {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        throw new IllegalStateException(
+                "Ollama chưa liệt kê model yêu cầu."
+        );
+    }
+
+    private String send(Map<String, Object> requestBody) {
         Map<?, ?> response = restClient.post()
                 .uri("/api/generate")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -79,21 +162,23 @@ public class OllamaService {
                 .retrieve()
                 .body(Map.class);
 
-        if (response == null) {
-            throw new IllegalStateException(
-                    "Ollama không trả về dữ liệu."
-            );
-        }
-
-        Object answer = response.get("response");
-
-        if (!(answer instanceof String text)
+        if (response == null
+                || !(response.get("response") instanceof String text)
                 || text.isBlank()) {
+
             throw new IllegalStateException(
                     "Ollama không trả về nội dung hợp lệ."
             );
         }
 
         return text.trim();
+    }
+
+    private static void requireText(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Nội dung gửi AI không được để trống."
+            );
+        }
     }
 }

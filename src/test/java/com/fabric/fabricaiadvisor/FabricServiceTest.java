@@ -18,19 +18,27 @@ class FabricServiceTest {
     private FabricService fabricService;
 
     @Test
-    void testFilterByBudget() {
 
+    void testFilterByBudget() {
         List<Map<String, Object>> fabrics =
                 fabricService.getFabricsByBudget(100000);
 
-        assertEquals(11, fabrics.size());
+        // Database bàn giao có 5 mẫu đáp ứng toàn bộ khoảng giá.
+        assertEquals(5, fabrics.size());
 
         for (Map<String, Object> fabric : fabrics) {
-            Number price = (Number)
+            Number minPrice = (Number)
                     fabric.get("price_min_vnd_per_m");
 
-            assertNotNull(price);
-            assertTrue(price.doubleValue() <= 100000);
+            Number maxPrice = (Number)
+                    fabric.get("price_max_vnd_per_m");
+
+            assertNotNull(minPrice);
+            assertNotNull(maxPrice);
+
+            assertTrue(minPrice.doubleValue() >= 0);
+            assertTrue(maxPrice.doubleValue() >= minPrice.doubleValue());
+            assertTrue(maxPrice.doubleValue() <= 100000);
         }
     }
 

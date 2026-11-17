@@ -1,4 +1,3 @@
-
 package com.fabric.fabricaiadvisor;
 
 import org.springframework.boot.CommandLineRunner;
@@ -16,37 +15,35 @@ public class DatabaseConnectionTest implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        System.out.println("===== KIEM TRA SQLITE =====");
+        System.out.println("===== KIỂM TRA SQLITE =====");
 
         try {
-            Integer count = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM sqlite_master " +
-                            "WHERE type = 'table' " +
-                            "AND name IN ('fabric_database', " +
-                            "'fabric_sources', 'training_examples')",
+            Integer totalFabrics = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM fabric_database",
                     Integer.class
             );
 
-            System.out.println("So bang tim thay: " + count + "/3");
-
-            if (count != null && count == 3) {
-                System.out.println("KET NOI SQLITE THANH CONG!");
-
-                Integer totalFabrics = jdbcTemplate.queryForObject(
-                        "SELECT COUNT(*) FROM fabric_database",
-                        Integer.class
+            if (totalFabrics == null) {
+                throw new IllegalStateException(
+                        "Không nhận được kết quả đếm dữ liệu vải."
                 );
+            }
 
-                System.out.println("===== KIEM TRA DU LIEU VAI =====");
-                System.out.println("Tong so mau vai: " + totalFabrics);
+            System.out.println("ĐỌC DATABASE SQLITE THÀNH CÔNG!");
+            System.out.println("Tổng số mẫu vải: " + totalFabrics);
 
-            } else {
-                System.out.println("CHUA TIM THAY DU 3 BANG!");
+            if (totalFabrics == 0) {
+                System.out.println(
+                        "Lưu ý: bảng fabric_database hiện chưa có dữ liệu."
+                );
             }
 
         } catch (Exception e) {
-            System.out.println("LOI KET NOI DATABASE!");
-            e.printStackTrace();
+            throw new IllegalStateException(
+                    "Không đọc được bảng fabric_database. "
+                            + "Kiểm tra DATABASE_URL và file database thực tế.",
+                    e
+            );
         }
     }
 }

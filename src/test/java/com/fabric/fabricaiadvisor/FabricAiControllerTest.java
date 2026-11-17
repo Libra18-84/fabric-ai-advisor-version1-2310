@@ -1,150 +1,63 @@
-
 package com.fabric.fabricaiadvisor;
 
+import com.fabric.fabricaiadvisor.controller.FabricAdviceController;
 import com.fabric.fabricaiadvisor.controller.FabricAiController;
-import com.fabric.fabricaiadvisor.service.OllamaService;
-
-import org.junit.jupiter.api.BeforeEach;
+import com.fabric.fabricaiadvisor.service.FabricAdviceService;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.ResourceAccessException;
-
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class FabricAiControllerTest {
 
-    private OllamaService ollamaService;
-    private FabricAiController controller;
-
-    @BeforeEach
-    void setUp() {
-        ollamaService = mock(OllamaService.class);
-        controller = new FabricAiController(ollamaService);
-    }
-
     @Test
-    void testRejectNullRequest() {
-        ResponseEntity<Map<String, Object>> response =
-                controller.ask(null);
+    void bothEndpointsUseTheSameService() {
+        FabricAdviceService service = mock(FabricAdviceService.class);
 
-        assertEquals(400, response.getStatusCode().value());
-        verifyNoInteractions(ollamaService);
-    }
+        FabricAdviceController primary =
+                new FabricAdviceController(service);
+        FabricAiController legacy =
+                new FabricAiController(service);
 
-    @Test
-    void testRejectMissingQuestion() {
-        ResponseEntity<Map<String, Object>> response =
-                controller.ask(Map.of("other", "value"));
+        String query = "Sơ mi dưới 200000 đồng/m";
+        Map<String, Object> preferences = Map.of("language", "vi");
 
-        assertEquals(400, response.getStatusCode().value());
-        verifyNoInteractions(ollamaService);
-    }
-
-    @Test
-    void testRejectEmptyQuestion() {
-        ResponseEntity<Map<String, Object>> response =
-                controller.ask(Map.of("question", ""));
-
-        assertEquals(400, response.getStatusCode().value());
-        verifyNoInteractions(ollamaService);
-    }
-
-    @Test
-    void testRejectNonStringQuestion() {
-        ResponseEntity<Map<String, Object>> response =
-                controller.ask(Map.of("question", 123));
-
-        assertEquals(400, response.getStatusCode().value());
-        verifyNoInteractions(ollamaService);
-    }
-
-    @Test
-    void testRejectTooLongQuestion() {
-        ResponseEntity<Map<String, Object>> response =
-                controller.ask(Map.of(
-                        "question",
-                        "a".repeat(1001)
-                ));
-
-        assertEquals(400, response.getStatusCode().value());
-        verifyNoInteractions(ollamaService);
-    }
-
-    @Test
-    void testSuccessfulAnswer() {
-        String question = "Vải cotton có phù hợp may sơ mi không?";
-
-        when(ollamaService.generateAnswer(question))
-                .thenReturn("Cotton có thể phù hợp để may áo sơ mi.");
-
-        ResponseEntity<Map<String, Object>> response =
-                controller.ask(Map.of("question", question));
-
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-
-        assertEquals(
-                "Cotton có thể phù hợp để may áo sơ mi.",
-                response.getBody().get("answer")
+        Map<String, Object> result = Map.of(
+                "status", "no_results",
+                "recommendations", List.of(),
+                "explanation", "Chưa tìm thấy vải phù hợp."
         );
 
-        assertEquals(
-                "gemma3:4b",
-                response.getBody().get("model")
-        );
+        when(service.advise(query, preferences)).thenReturn(result);
 
-        assertEquals(
-                true,
-                response.getBody().get("ai_connected")
-        );
+        var a = primary.advise(Map.of(
+                "query", query,
+                "userPreferences", preferences
+        ));
 
-        verify(ollamaService).generateAnswer(question);
+        var b = legacy.ask(Map.of(
+                "question", query,
+                "userPreferences", preferences
+        ));
+
+        assertEquals(result, a.getBody());
+        assertEquals(result, b.getBody());
+
+        verify(service, times(2)).advise(query, preferences);
     }
 
     @Test
-    void testOllamaConnectionFailure() {
-        when(ollamaService.generateAnswer(anyString()))
-                .thenThrow(new ResourceAccessException(
-                        "Ollama connection refused"
-                ));
+    void invalidRequestDoesNotInvokeService() {
+        FabricAdviceService service = mock(FabricAdviceService.class);
+        FabricAiController controller = new FabricAiController(service);
 
-        ResponseEntity<Map<String, Object>> response =
-                controller.ask(Map.of(
-                        "question",
-                        "Tư vấn vải cotton"
-                ));
-
-        assertEquals(503, response.getStatusCode().value());
-        assertNotNull(response.getBody());
         assertEquals(
-                false,
-                response.getBody().get("ai_connected")
+                400,
+                controller.ask(null).getStatusCode().value()
         );
-    }
 
-    @Test
-    void testInvalidOllamaResponse() {
-        when(ollamaService.generateAnswer(anyString()))
-                .thenThrow(new IllegalStateException(
-                        "Invalid response"
-                ));
-
-        ResponseEntity<Map<String, Object>> response =
-                controller.ask(Map.of(
-                        "question",
-                        "Tư vấn vải linen"
-                ));
-
-        assertEquals(502, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertEquals(
-                false,
-                response.getBody().get("ai_connected")
-        );
+        verifyNoInteractions(service);
     }
 }
-

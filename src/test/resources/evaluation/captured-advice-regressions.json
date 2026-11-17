@@ -1,0 +1,206 @@
+{
+  "origin": "Captured native Gemma drafts, 2026-11-17 22:46 Asia/Saigon; regression fixtures only, not independent model-quality measurements.",
+  "catalog": [
+    {
+      "fabric_id": "FAB001",
+      "fabric_name": "Cotton 100% woven",
+      "currency": "VND",
+      "fiber_composition": "Cotton 100%",
+      "construction": "Dệt thoi",
+      "gsm_range": "120-180",
+      "typical_width": "140-150 cm",
+      "price_min_vnd_per_m": 45000.0,
+      "price_max_vnd_per_m": 90000.0,
+      "recommended_garments": "Áo sơ mi, váy, đồ trẻ em",
+      "properties_and_cautions": "Thoáng khí, thấm hút; có thể co sau giặt",
+      "verification_status": "unverified",
+      "source_url": "https://www.vaithaihoa.vn/tin-tuc/gia-vai-si-2026"
+    },
+    {
+      "fabric_id": "FAB005",
+      "fabric_name": "Kate / cotton-poly blend",
+      "currency": "VND",
+      "fiber_composition": "Polyester/cotton; tỷ lệ tùy mã",
+      "construction": "Dệt thoi",
+      "gsm_range": "110-160",
+      "typical_width": "thường 1.4-1.5 m (xác minh theo mã)",
+      "price_min_vnd_per_m": 30000.0,
+      "price_max_vnd_per_m": 55000.0,
+      "recommended_garments": "Sơ mi, đồng phục",
+      "properties_and_cautions": "Ít nhăn hơn cotton thuần tùy tỷ lệ pha",
+      "verification_status": "unverified",
+      "source_url": "https://www.vaithaihoa.vn/tin-tuc/bang-gia-vai-si-thai-hoa"
+    },
+    {
+      "fabric_id": "FAB006",
+      "fabric_name": "Linen / đũi",
+      "currency": "VND",
+      "fiber_composition": "Linen hoặc blend; phải xác minh nhãn",
+      "construction": "Dệt thoi",
+      "gsm_range": "140-200",
+      "typical_width": "thường 1.4-1.5 m (xác minh)",
+      "price_min_vnd_per_m": 85000.0,
+      "price_max_vnd_per_m": 160000.0,
+      "recommended_garments": "Sơ mi mùa nóng, quần rộng, váy",
+      "properties_and_cautions": "Thoáng; dễ nhăn, độ rũ phụ thuộc thành phần",
+      "verification_status": "unverified",
+      "source_url": "https://www.vaithaihoa.vn/tin-tuc/gia-vai-si-2026"
+    }
+  ],
+  "cases": [
+    {
+      "id": "warmup",
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "criteria": {
+        "intent": "recommend_fabric",
+        "garment": "sơ mi",
+        "maxPriceVndPerMeter": 200000,
+        "budgetInclusive": true,
+        "preferences": [],
+        "needsClarification": false,
+        "clarificationQuestion": null,
+        "requiredProperties": []
+      },
+      "drafts": [
+        {
+          "explanation": "Dựa trên yêu cầu về giá tối đa 200.000 đồng/mét, hệ thống gợi ý 3 loại vải: Cotton 100% woven, Kate/cotton-poly blend và Linen/đũi. Các loại vải này đều có giá nằm trong khoảng từ 45.000 đến 160.000 đồng/mét. Lưu ý rằng tất cả dữ liệu này chưa được xác minh độc lập và chỉ mang tính tham khảo.",
+          "reasonsById": {
+            "FAB001": "Cotton 100% woven có giá từ 45.000 đến 90.000 đồng/mét, phù hợp với ngân sách 200.000 đồng/mét.",
+            "FAB005": "Kate / cotton-poly blend có giá từ 30.000 đến 55.000 đồng/mét, đáp ứng yêu cầu về giá.",
+            "FAB006": "Linen / đũi có giá từ 85.000 đến 160.000 đồng/mét, nằm trong phạm vi ngân sách."
+          }
+        },
+        {
+          "explanation": "Dựa trên yêu cầu về giá tối đa 200.000 đồng/mét, hệ thống gợi ý 3 loại vải: Cotton 100% woven, Kate / cotton-poly blend và Linen / đũi. Các loại vải này đều có giá nằm trong khoảng từ 45.000 đến 160.000 đồng/mét. Lưu ý rằng tất cả dữ liệu này chưa được xác minh độc lập và chỉ mang tính tham khảo.",
+          "reasonsById": {
+            "FAB001": "Cotton 100% woven có giá từ 45.000 đến 90.000 đồng/mét, phù hợp với ngân sách 200.000 đồng/mét.",
+            "FAB005": "Kate / cotton-poly blend có giá từ 30.000 đến 55.000 đồng/mét, đáp ứng yêu cầu về giá.",
+            "FAB006": "Linen / đũi có giá từ 85.000 đến 160.000 đồng/mét, nằm trong phạm vi ngân sách."
+          }
+        }
+      ]
+    },
+    {
+      "id": "basic",
+      "query": "Tôi cần vải may áo sơ mi, không quá 200.000 đồng/m.",
+      "criteria": {
+        "intent": "recommend_fabric",
+        "garment": "sơ mi",
+        "maxPriceVndPerMeter": 200000,
+        "budgetInclusive": true,
+        "preferences": [],
+        "needsClarification": false,
+        "clarificationQuestion": null,
+        "requiredProperties": []
+      },
+      "drafts": [
+        {
+          "explanation": "Dựa trên yêu cầu về giá tối đa 200.000 đồng/mét, hệ thống gợi ý 3 loại vải: Cotton 100% woven, Kate/cotton-poly blend và Linen/đũi. Các loại vải này đều có giá nằm trong khoảng từ 45.000 đến 160.000 đồng/mét. Lưu ý rằng tất cả dữ liệu này chưa được xác minh độc lập và chỉ mang tính tham khảo.",
+          "reasonsById": {
+            "FAB001": "Cotton 100% woven có giá từ 45.000 đến 90.000 đồng/mét, phù hợp với ngân sách 200.000 đồng/mét.",
+            "FAB005": "Kate / cotton-poly blend có giá từ 30.000 đến 55.000 đồng/mét, đáp ứng yêu cầu về giá.",
+            "FAB006": "Linen / đũi có giá từ 85.000 đến 160.000 đồng/mét, nằm trong phạm vi ngân sách."
+          }
+        },
+        {
+          "explanation": "Dựa trên yêu cầu về giá tối đa 200.000 đồng/mét, hệ thống gợi ý 3 loại vải: Cotton 100% woven, Kate / cotton-poly blend và Linen / đũi. Các loại vải này đều có giá nằm trong khoảng từ 45.000 đến 160.000 đồng/mét. Lưu ý rằng tất cả dữ liệu này chưa được xác minh độc lập và chỉ mang tính tham khảo.",
+          "reasonsById": {
+            "FAB001": "Cotton 100% woven có giá từ 45.000 đến 90.000 đồng/mét, phù hợp với ngân sách 200.000 đồng/mét.",
+            "FAB005": "Kate / cotton-poly blend có giá từ 30.000 đến 55.000 đồng/mét, đáp ứng yêu cầu về giá.",
+            "FAB006": "Linen / đũi có giá từ 85.000 đến 160.000 đồng/mét, nằm trong phạm vi ngân sách."
+          }
+        }
+      ]
+    },
+    {
+      "id": "inclusive-boundary",
+      "query": "Tôi cần vải may áo sơ mi, tối đa 90.000 đồng/m.",
+      "criteria": {
+        "intent": "recommend_fabric",
+        "garment": "sơ mi",
+        "maxPriceVndPerMeter": 90000,
+        "budgetInclusive": true,
+        "preferences": [],
+        "needsClarification": false,
+        "clarificationQuestion": null,
+        "requiredProperties": []
+      },
+      "drafts": [
+        {
+          "explanation": "Dựa trên yêu cầu về giá tối đa 90.000 đồng/mét, hệ thống gợi ý hai loại vải: Cotton 100% dệt thoi và Kate/cotton-poly blend. Cả hai loại vải đều có giá nằm trong khoảng yêu cầu, nhưng chưa được xác minh độc lập. Kết quả chỉ mang tính tham khảo.",
+          "reasonsById": {
+            "FAB001": "Cotton 100% dệt thoi có giá từ 45.000 đến 90.000 VND/mét, đáp ứng yêu cầu về giá tối đa.",
+            "FAB005": "Kate/cotton-poly blend có giá từ 30.000 đến 55.000 VND/mét, cũng nằm trong khoảng giá yêu cầu."
+          }
+        },
+        {
+          "explanation": "Dựa trên yêu cầu về giá tối đa 90.000 đồng/mét, hệ thống gợi ý hai loại vải: Cotton 100% dệt thoi và Kate/cotton-poly blend. Cả hai loại vải đều có giá nằm trong khoảng yêu cầu, nhưng chưa được xác minh độc lập. Kết quả chỉ mang tính tham khảo.",
+          "reasonsById": {
+            "FAB001": "Cotton 100% dệt thoi có giá từ 45.000 đến 90.000 VND/mét, đáp ứng yêu cầu về giá tối đa.",
+            "FAB005": "Kate/cotton-poly blend có giá từ 30.000 đến 55.000 VND/mét, cũng nằm trong khoảng giá yêu cầu."
+          }
+        }
+      ]
+    },
+    {
+      "id": "strict-boundary",
+      "query": "Tôi cần vải may áo sơ mi, dưới 90.000 đồng/m.",
+      "criteria": {
+        "intent": "recommend_fabric",
+        "garment": "sơ mi",
+        "maxPriceVndPerMeter": 90000,
+        "budgetInclusive": false,
+        "preferences": [],
+        "needsClarification": false,
+        "clarificationQuestion": null,
+        "requiredProperties": []
+      },
+      "drafts": [
+        {
+          "explanation": "Dựa trên yêu cầu về vải may áo sơ mi với giá tối đa 90.000 đồng/mét, đề xuất vải Kate / cotton-poly blend có giá từ 30.000 đến 55.000 đồng/mét. Tuy nhiên, cần lưu ý rằng dữ liệu này chưa được xác minh.",
+          "reasonsById": {
+            "FAB005": "Vải Kate / cotton-poly blend có giá nằm trong khoảng yêu cầu (30.000 - 55.000 VND/m) và được khuyến nghị cho áo sơ mi."
+          }
+        },
+        {
+          "explanation": "Dựa trên yêu cầu về vải may áo sơ mi với giá tối đa 90.000 đồng/mét, đề xuất vải Kate / cotton-poly blend có giá từ 30.000 đến 55.000 đồng/mét. Tuy nhiên, cần lưu ý rằng dữ liệu này chưa được xác minh.",
+          "reasonsById": {
+            "FAB005": "Vải Kate / cotton-poly blend có giá nằm trong khoảng yêu cầu (30.000 - 55.000 VND/m) và được khuyến nghị cho áo sơ mi."
+          }
+        }
+      ]
+    },
+    {
+      "id": "no-stretch-requirement",
+      "query": "Tôi cần vải may áo sơ mi, không cần co giãn, không quá 200.000 đồng/m.",
+      "criteria": {
+        "intent": "recommend_fabric",
+        "garment": "sơ mi",
+        "maxPriceVndPerMeter": 200000,
+        "budgetInclusive": true,
+        "preferences": [],
+        "needsClarification": false,
+        "clarificationQuestion": null,
+        "requiredProperties": []
+      },
+      "drafts": [
+        {
+          "explanation": "Dựa trên yêu cầu của bạn, chúng tôi đề xuất ba loại vải: Cotton 100% dệt thoi, Kate/cotton-poly blend và Linen/đũi. Tuy nhiên, tất cả các đề xuất đều chưa được xác minh độc lập và chỉ mang tính tham khảo. Người dùng chưa nhập sở thích để xếp hạng, do đó, điểm xếp hạng là 0.",
+          "reasonsById": {
+            "FAB001": "Cotton 100% dệt thoi đáp ứng yêu cầu về loại vải (áo sơ mi) và giá (giá từ 45000 VND đến 90000 VND).",
+            "FAB005": "Kate/cotton-poly blend đáp ứng yêu cầu về loại vải (áo sơ mi) và giá (giá từ 30000 VND đến 55000 VND).",
+            "FAB006": "Linen/đũi đáp ứng yêu cầu về loại vải (áo sơ mi mùa nóng) và giá (giá từ 85000 VND đến 160000 VND)."
+          }
+        },
+        {
+          "explanation": "Dựa trên yêu cầu của bạn, chúng tôi đề xuất ba loại vải: Cotton 100% dệt thoi, Kate/cotton-poly blend và Linen/đũi. Tuy nhiên, tất cả các đề xuất đều chưa được xác minh độc lập và chỉ mang tính tham khảo. Người dùng chưa nhập sở thích để xếp hạng, do đó, điểm xếp hạng là 0. Các loại vải này đáp ứng yêu cầu về loại vải (áo sơ mi) và giá (dưới 200.000 đồng/m), nhưng cần lưu ý rằng thông tin chưa được xác minh.",
+          "reasonsById": {
+            "FAB001": "Cotton 100% dệt thoi đáp ứng yêu cầu về loại vải (áo sơ mi) và giá (giá từ 45000 VND đến 90000 VND).",
+            "FAB005": "Kate/cotton-poly blend đáp ứng yêu cầu về loại vải (áo sơ mi) và giá (giá từ 30000 VND đến 55000 VND).",
+            "FAB006": "Linen/đũi đáp ứng yêu cầu về loại vải (áo sơ mi mùa nóng) và giá (giá từ 85000 VND đến 160000 VND)."
+          }
+        }
+      ]
+    }
+  ]
+}

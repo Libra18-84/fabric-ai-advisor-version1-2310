@@ -46,3 +46,27 @@ build/
 
 # File build Maven
 target/
+# Backup và gói vá cũ
+.backup*/
+*.backup-*
+*.bak
+/AP_DUNG_*.ps1
+/AP_DUNG_*.txt
+/CHUYEN_LLAMA_CPP.ps1
+
+# Template lưu cũ
+/src/main/resources/templates/index_backup.html
+/src/main/resources/templates/index_before_gemma.html
+
+# Model và log cục bộ
+*.gguf
+/models/
+/llama.cpp/
+/logs/
+*.log
+*.pid
+*.pid.json
+
+# Chỉ giữ gói database mẫu đã rà soát
+*.zip
+!/fabric_database_handover.zip
