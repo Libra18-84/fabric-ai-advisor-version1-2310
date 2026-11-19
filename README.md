@@ -4,17 +4,24 @@
 
 ## Trạng thái dự án
 
-Bản demo đang phát triển, dùng catalog mẫu. Chưa phải bản production hoặc cam kết dữ liệu chính xác ngoài thực tế.
+Bản demo đang phát triển, dùng catalog mẫu. Kết quả dưới đây ghi nhận ngày **19/11/2026**. Chưa có cơ sở kết luận bộ kiểm chứng AI đáng tin cậy trong thực tế.
 
 | Hạng mục | Kết quả đã ghi nhận |
 |---|---|
-| Kiểm thử mã | 360 test, 0 failure, 0 error, 0 skipped; model được giả lập khi cần |
-| Tư vấn với model thật | Một lượt `advice_only` đạt warm-up và 12/12 ca API trước bản vá Java hẹp cho khẳng định không nhăn |
-| Giao diện sau bản vá | Sơ mi không quá 200.000 VND/m trả FAB001/FAB005/FAB006; dưới 90.000 VND/m chỉ FAB005 |
-| Kiểm chứng Qwen độc lập | Chưa đạt mục tiêu: một lượt prompt đang giữ khớp 8/11 nhãn đề xuất; phương án context thử khác chỉ khớp 11/24 và đã bị loại |
-| Thời gian phản hồi | Bốn mẫu luồng tư vấn đầy đủ đã ghi nhận khoảng 9,7–14,5 giây phía HTTP client; chưa chứng minh p95 dưới 5 giây |
+| Kiểm thử mã | 370 test, 0 failure, 0 error, 0 skipped trên project chính; model được giả lập khi cần |
+| Form lọc và xếp hạng | Đã kiểm tra giá, sở thích và điều kiện chưa đủ bằng chứng; ca hủy sở thích cho cả ba vải 0 điểm sau bản sửa |
+| Tư vấn với model thật | Bộ live được lưu trong phiên có warm-up và 12/12 ca hợp đồng API đạt; không phải đánh giá độ chính xác chung của model |
+| Đầu vào API không hợp lệ | 4/4 ca thực tế trả HTTP 400: câu hỏi rỗng, thiếu câu hỏi, sai kiểu dữ liệu, dài 1001 ký tự |
+| Mất kết nối và khôi phục | Ngắt Qwen trả fallback chưa được kiểm chứng; bật lại Qwen, API tư vấn phục hồi. Ngắt Gemma trả hướng dẫn dùng form, không đề xuất vải. Đã bật lại và xác nhận cả hai model healthy |
+| Kiểm chứng AI độc lập | Chưa đạt: Qwen có cả bỏ lọt dự thảo sai và từ chối dự thảo đúng. Phương án nêu lỗi trước kết luận chỉ khớp 2/4 ca; Gemma thử cùng vai trò cũng khớp 2/4, không được áp dụng |
+| Thời gian phản hồi | Ca API phục hồi Qwen đo khoảng 16,8 giây ở lớp dịch vụ. Chưa chứng minh đáp ứng p95 dưới 5 giây |
+| Tiếng Việt và dữ liệu HTTP | Phản hồi catalog UTF-8 đúng, 14 mẫu; 182 trường khớp database đã rà soát |
 
-360 test mã không có nghĩa 360 câu hỏi được model thật trả lời đúng. Các bộ nhỏ và nhãn đề xuất không chứng minh độ chính xác thực tế trên 95% hay mức hài lòng trên 80%.
+370 test mã không có nghĩa 370 câu hỏi được model thật trả lời đúng. Khớp nhãn trong bộ thử nhỏ không phải độ chính xác ngoài thực tế; lý do kiểm chứng vẫn phải được đối chiếu với nguồn. Không có bằng chứng cho tuyên bố độ chính xác trên 95% hoặc mức hài lòng trên 80%.
+
+`factCheck.validated=true` thể hiện rằng các quy tắc đã qua và model kiểm chứng trả chấp nhận cho dự thảo đó. Nó không tự chứng minh tư vấn đúng ngoài thực tế hoặc model kiểm chứng đủ tin cậy. Dữ liệu catalog vẫn giữ `verification_status=unverified`.
+
+Xem phạm vi, các ca đạt và các giới hạn còn tồn tại trong [báo cáo kiểm thử ngày 19/11/2026](TEST_REPORT_2026-11-19.md).
 
 ## Luồng tư vấn đang chạy
 
@@ -26,7 +33,7 @@ Bản demo đang phát triển, dùng catalog mẫu. Chưa phải bản producti
 4. Backend đọc bằng chứng trong mô tả, lọc điều kiện bắt buộc và chấm điểm sở thích.
 5. Model chính chọn một hoặc nhiều ID và viết lý do cho từng vải. Backend dựng phần tóm tắt chung theo catalog, thay cho phần tóm tắt tự do của model.
 6. Backend kiểm tra ID, giá, trang phục, điều kiện bắt buộc, thành phần, URL, trạng thái xác minh và các khẳng định đặc tính nhận diện được; evaluator tiếp tục đối chiếu dự thảo với nguồn.
-7. Nếu bị từ chối, model chính được sửa tối đa một lần. Chỉ trả `factCheck.validated=true` khi kiểm tra bắt buộc đã đạt.
+7. Nếu bị từ chối, model chính được sửa tối đa một lần. `factCheck.validated=true` chỉ được trả khi quy tắc đã qua và evaluator trả chấp nhận; độ tin cậy của evaluator còn là giới hạn đã ghi ở trên.
 
 Tên, khoảng giá, nguồn và trạng thái xác minh trong response do backend lấy từ SQL. Cập nhật catalog không đòi hỏi train lại model. Bảng `training_examples` hiện không được dùng để trả lời chat.
 
@@ -88,8 +95,51 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\DUNG_MODEL_LLAMA.ps1
 
 Khi dùng IntelliJ Run thay cho script, thiết lập biến môi trường trong đúng Run Configuration. Biến đặt ở một cửa sổ PowerShell không tự áp dụng cho tiến trình mở từ IntelliJ. Nếu console sai dấu tiếng Việt, kiểm tra UTF-8; lỗi hiển thị console không tự chứng minh dữ liệu HTTP/SQLite bị hỏng.
 
+### Chế độ trả lời từ catalog
+
+Mặc định, ứng dụng chạy luồng đầy đủ với model kiểm chứng. Để thử chế độ catalog, mở PowerShell tại thư mục dự án sau khi các model local đã sẵn sàng, rồi chạy:
+
+~~~powershell
+$env:FABRIC_ADVICE_CATALOG_ONLY = 'true'
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\CHAY_APP_LLAMA.ps1
+~~~
+
+Gemma đọc yêu cầu tiếng Việt. Java lọc, xếp hạng và dựng kết quả từ SQLite. API dùng trạng thái fallback và evaluationStatus=not_run khi trả đề xuất từ catalog. Dữ liệu mẫu vẫn giữ trạng thái chưa xác minh độc lập. Đặt biến trên thành false và khởi động lại backend để chọn luồng mặc định.
+
+Trên Windows, ba lượt đối chiếu cùng câu hỏi về sơ mi giá không quá 200.000 VND/m cho cùng FAB001, FAB005, FAB006. Thời gian xử lý trung vị giảm từ 10,30 xuống 2,00 giây. Đây là phép đo của một câu hỏi. Xem chi tiết trong báo cáo kiểm thử.
+
 ## Registry và đổi model khi đang chạy
 
 `AiModelClient` là interface. `LlamaCppModelClient` là adapter mặc định, `OllamaService` là adapter tương thích; `ActiveMainModel` là bean được inject vào các service chính. `AiModelRegistry` đọc file ngoài JAR được chọn bằng `AI_MODELS_FILE`.
 
 `ai-models.json` nằm cùng cấp `pom.xml`. `active.main` và `active.evaluation` chọn ID cấu hình trong `models`. Mẫu đi kèm dùng provider=llamacpp, Gemma 3 4B và Qwen 2.5 7B qua hai llama-server. Trường model là alias của server, không phải đường dẫn GGUF hoặc tag Ollama. Có thể chọn model/endpoint đã được phục vụ bằng cấu hình, không sửa code.
+
+## Kiểm thử
+
+Chạy kiểm thử mã thông thường sau khi chuẩn bị catalog theo hướng dẫn trên:
+
+```powershell
+.\mvnw.cmd test
+```
+
+Để chạy kiểm thử với model thật, khởi động cả hai llama-server, giữ cấu hình đã rà soát và dừng backend demo để tránh tranh tài nguyên. Bộ test tự khởi động một backend trên cổng ngẫu nhiên:
+
+```powershell
+.\mvnw.cmd "-Dtest=LiveAiEvaluationIT" "-Dlive.eval=true" test
+```
+
+Báo cáo được ghi vào `target/live-evaluation/<thư-mục-lượt-chạy>/report.json`. Bộ test gồm ca hợp đồng API và ca đánh giá độc lập của model kiểm chứng. Với cấu hình đã thử trong báo cáo hiện tại, phần kiểm chứng độc lập chưa đạt nên lệnh này có thể kết thúc bằng `BUILD FAILURE` dù các ca API thông thường đạt. Giữ nguyên nhãn và báo cáo thất bại để phân tích.
+
+Không dùng kết quả từ các quy tắc Java thay cho kết quả model trong thước đo kiểm chứng độc lập. Một ca API `success` hoặc endpoint `/health` trả `ok` không xác nhận model đánh giá đúng các dự thảo sai.
+
+## Đọc phản hồi UTF-8 trong Windows PowerShell
+
+Trong môi trường Windows PowerShell đã thử, việc parse phản hồi trực tiếp bằng `Invoke-RestMethod` có thể làm sai dấu tiếng Việt khi phản hồi không được giải mã đúng. Khi kiểm tra API, lưu phản hồi HTTP gốc rồi đọc file với UTF-8:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing -Uri "http://localhost:8080/api/fabrics" -OutFile ".\target\fabrics-http-raw.json"
+$catalog = Get-Content -LiteralPath ".\target\fabrics-http-raw.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+$catalog.total
+```
+
+Cách này giữ nguyên dữ liệu HTTP để đối chiếu. Các file đã bị giải mã sai rồi ghi lại cần lấy lại từ phản hồi gốc; chỉ đổi encoding lúc đọc file cũ không tự khôi phục dữ liệu.

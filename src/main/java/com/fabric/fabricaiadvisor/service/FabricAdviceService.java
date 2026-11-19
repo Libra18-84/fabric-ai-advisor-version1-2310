@@ -2,6 +2,8 @@ package com.fabric.fabricaiadvisor.service;
 
 import com.fabric.fabricaiadvisor.dto.FabricCriteria;
 import com.fabric.fabricaiadvisor.repository.FabricRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 
@@ -16,6 +18,7 @@ public class FabricAdviceService {
     private final FabricExplanationService explanationService;
     private final FabricValidationService validationService;
     private final FabricEvidenceService evidenceService;
+    private final boolean catalogOnly;
 
     public FabricAdviceService(
             FabricIntentService intentService,
@@ -24,13 +27,25 @@ public class FabricAdviceService {
             FabricExplanationService explanationService,
             FabricValidationService validationService,
             FabricEvidenceService evidenceService) {
+        this(intentService, repository, recommendationService, explanationService, validationService, evidenceService, false);
+    }
 
+    @Autowired
+    public FabricAdviceService(
+            FabricIntentService intentService,
+            FabricRepository repository,
+            FabricRecommendationService recommendationService,
+            FabricExplanationService explanationService,
+            FabricValidationService validationService,
+            FabricEvidenceService evidenceService,
+            @Value("${fabric.advice.catalog-only:false}") boolean catalogOnly) {
         this.intentService = intentService;
         this.repository = repository;
         this.recommendationService = recommendationService;
         this.explanationService = explanationService;
         this.validationService = validationService;
         this.evidenceService = evidenceService;
+        this.catalogOnly = catalogOnly;
     }
 
     private static final List<String> FABRIC_FIELDS = List.of(
@@ -179,6 +194,9 @@ public class FabricAdviceService {
                     ranked.size(),
                     missing
             );
+        }
+        if (catalogOnly) {
+            return adviseFromCatalog(criteria, topResults, timings);
         }
         FabricExplanationService.Draft previous = null;
 
@@ -329,6 +347,31 @@ public class FabricAdviceService {
                 validation,
                 attempts
         );
+    }
+
+    private Map<String, Object> adviseFromCatalog(
+            FabricCriteria criteria,
+            List<Map<String, Object>> topResults,
+            AdviceTimings timings) {
+
+        Map<String, String> reasons = new LinkedHashMap<>();
+        for (var row : topResults) {
+            reasons.put(row.get("fabric_id").toString(), row.get("recommendation_reason").toString());
+        }
+        var draft = FabricCatalogSummary.apply(topResults, new FabricExplanationService.Draft("", reasons));
+        FabricValidationService.Result validation;
+        try (var stage = timings.start("validation")) {
+            validation = validationService.rulesOnly(criteria, topResults, draft, "");
+        }
+
+        if (!validation.rulesPassed()) {
+            return response("validation_failed", criteria,
+                    "Chưa thể xác nhận kết quả theo dữ liệu catalog.", List.of(), validation, 0);
+        }
+        return response("fallback", criteria,
+                draft.explanation() + " Kết quả được lọc và xếp hạng từ catalog theo điều kiện đã nhận diện."
+                        + " Bước kiểm chứng bằng model chưa được chạy.",
+                buildRecommendations(topResults, draft), validation, 0);
     }
 
     private Map<String, Object> insufficientData(

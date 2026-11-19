@@ -97,9 +97,15 @@ public class FabricRecommendationController {
                         allPreferences
                 );
 
-// Tao chuoi dung de cham diem.
+        // Resolve constraints before scoring so removed or newly recognized
+        // preferences affect the scores, reasons and response metadata together.
+        var criteria = FabricConstraintService.guard(
+                requirements + "; " + preference,
+                new FabricCriteria("recommend_fabric", garment, BigDecimal.valueOf(budget),
+                        true, normalizedPreferences, false, null));
+
         String combinedPreference =
-                String.join(", ", normalizedPreferences);
+                String.join(", ", criteria.allProperties());
 
 
 
@@ -110,10 +116,6 @@ public class FabricRecommendationController {
                         combinedPreference
                 );
 
-        var criteria = FabricConstraintService.guard(
-                requirements + "; " + preference,
-                new FabricCriteria("recommend_fabric", garment, BigDecimal.valueOf(budget),
-                        true, normalizedPreferences, false, null));
         var assessment = new FabricEvidenceService(recommendationService)
                 .assessRequired(fabrics, criteria.requiredProperties());
         String status;
